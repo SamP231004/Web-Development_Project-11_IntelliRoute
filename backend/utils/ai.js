@@ -55,8 +55,9 @@ Ticket information:
         const match = raw.match(/```json\s*([\s\S]*?)\s*```/i);
         const jsonString = match ? match[1] : raw.trim();
         return JSON.parse(jsonString);
-    } catch (e) {
-        console.log("Failed to parse JSON from AI response" + e.message);
+    } 
+    catch (error) {
+        console.log("Failed to parse JSON from AI response" + error.message);
         return null;
     }
 };
