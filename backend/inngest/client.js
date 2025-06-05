@@ -1,3 +1,3 @@
 import { Inngest } from "inngest";
 
-export const inngest = ({ id: "IntelliRoute" });
+export const inngest = new Inngest({ id: "IntelliRoute" });
