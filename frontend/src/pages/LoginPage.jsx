@@ -1,13 +1,10 @@
-// frontend2/src/pages/LoginPage.jsx
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "../components/useToast";
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import eye icons
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
-// Assume your backend API URL is from .env
 const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL;
 
-// Define default credentials for each role
 const defaultCredentials = {
     user: {
         email: "testuser@example.com",
@@ -24,36 +21,29 @@ const defaultCredentials = {
 };
 
 export default function LoginPage() {
-    // State to manage the selected role in the dropdown
     const [selectedRole, setSelectedRole] = useState('user'); 
     
-    // State to manage the email and password fields, initialized with the default 'user' credentials
     const [form, setForm] = useState(defaultCredentials[selectedRole]); 
     
     const [loading, setLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false); // State for password visibility
+    const [showPassword, setShowPassword] = useState(false);
 
     const navigate = useNavigate();
     const showToast = useToast();
 
-    // useEffect hook to update form fields whenever the selectedRole changes
     useEffect(() => {
         setForm(defaultCredentials[selectedRole]);
-    }, [selectedRole]); // Dependency array: this effect runs when selectedRole changes
+    }, [selectedRole]); 
 
-    // Handles changes to email and password input fields (allows manual typing)
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    // Handles changes to the role dropdown
     const handleRoleChange = (e) => {
         const newRole = e.target.value;
         setSelectedRole(newRole);
-        // The useEffect above will automatically update 'form' with new credentials
     };
 
-    // Toggles password visibility
     const togglePasswordVisibility = () => {
         setShowPassword(prev => !prev);
     };
@@ -67,23 +57,26 @@ export default function LoginPage() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(form), // Sends the current email and password from 'form' state
+                body: JSON.stringify(form),
             });
 
             const data = await res.json();
 
             if (res.ok) {
                 localStorage.setItem("token", data.token);
-                localStorage.setItem("user", JSON.stringify(data.user)); // Store user object from response
+                localStorage.setItem("user", JSON.stringify(data.user));
                 showToast("Login successful!", "success");
                 navigate("/");
-            } else {
+            } 
+            else {
                 showToast(data.message || "Login failed", "error");
             }
-        } catch (err) {
+        } 
+        catch (err) {
             showToast("Network error. Please check your connection and try again.", "error");
             console.error("Login Error:", err);
-        } finally {
+        } 
+        finally {
             setLoading(false);
         }
     };
@@ -95,11 +88,9 @@ export default function LoginPage() {
                     <h1 className="text-5xl font-bold text-primary">Login Now!</h1>
                     <p className="py-6 text-lg">Access your personalized ticket management dashboard. Log in to create, track, and resolve issues efficiently.</p>
                 </div>
-                <div className="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100 lg:w-1/2">
-                    <form onSubmit={handleLogin} className="card-body">
+                <div className="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100 lg:w-1/2">                    <form onSubmit={handleLogin} className="card-body">
                         <h2 className="card-title text-3xl font-bold justify-center mb-6">Login</h2>
 
-                        {/* Select Role Dropdown */}
                         <div className="form-control">
                             <label className="label">
                                 <span className="label-text">Select Role</span>
@@ -134,14 +125,12 @@ export default function LoginPage() {
                         <div className="form-control">
                             <label className="label">
                                 <span className="label-text">Password</span>
-                            </label>
-                            {/* Password input with show/hide toggle */}
-                            <div className="relative">
+                            </label>                            <div className="relative">
                                 <input
-                                    type={showPassword ? "text" : "password"} // Dynamic type based on showPassword state
+                                    type={showPassword ? "text" : "password"}
                                     name="password"
                                     placeholder="password"
-                                    className="input input-bordered w-full pr-10" // Add padding for the icon
+                                    className="input input-bordered w-full pr-10"
                                     value={form.password}
                                     onChange={handleChange}
                                     required

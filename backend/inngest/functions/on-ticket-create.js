@@ -12,10 +12,8 @@ export const onTicketCreated = inngest.createFunction(
         try {
             const { ticketId } = event.data;
 
-            // Fetch Ticket from DB
             const ticket = await step.run("fetch-ticket", async () => {
                 const ticketObject = await Ticket.findById(ticketId);
-                // FIX: Corrected variable name from 'ticket' to 'ticketObject'
                 if (!ticketObject) {
                     throw new NonRetriableError("Ticket not found");
                 }
@@ -31,15 +29,13 @@ export const onTicketCreated = inngest.createFunction(
             const relatedskills = await step.run("ai-processing", async () => {
                 let skills = [];
                 if (aiResponse) {
-                    // Check if aiResponse.relatedSkills is an array before using .includes()
-                    // and ensure aiResponse.helpfulNotes is defined.
                     await Ticket.findByIdAndUpdate(ticket._id, {
                         priority: !["low", "medium", "high"].includes(aiResponse.priority)
                             ? "medium"
                             : aiResponse.priority,
-                        helpfulNotes: aiResponse.helpfulNotes || "No helpful notes provided by AI.", // Added fallback for helpfulNotes
+                        helpfulNotes: aiResponse.helpfulNotes || "No helpful notes provided by AI.",
                         status: "IN_PROGRESS",
-                        relatedSkills: aiResponse.relatedSkills || [], // Ensure it's an array
+                        relatedSkills: aiResponse.relatedSkills || [],
                     });
                     skills = aiResponse.relatedSkills || [];
                 }
@@ -47,40 +43,33 @@ export const onTicketCreated = inngest.createFunction(
             });
 
             const moderator = await step.run("assign-moderator", async () => {
-                let user = null; // Initialize user to null
+                let user = null;
 
-                // Only attempt to find a skilled moderator if relatedskills are present
                 if (relatedskills && relatedskills.length > 0) {
                     user = await User.findOne({
                         role: "moderator",
                         skills: {
                             $elemMatch: {
-                                // Join only if relatedskills has elements, otherwise regex might be invalid
                                 $regex: relatedskills.join("|"),
                                 $options: "i",
                             },
                         },
                     });
                 }
-                
                 if (!user) {
-                    // Fallback to finding an admin if no skilled moderator or no skills to match
                     user = await User.findOne({
                         role: "admin",
                     });
-                }
-
-                await Ticket.findByIdAndUpdate(ticket._id, {
+                } await Ticket.findByIdAndUpdate(ticket._id, {
                     assignedTo: user?._id || null,
+                    status: "ASSIGNED"
                 });
                 return user;
             });
 
-            // FIX: Corrected typo from 'setp.run' to 'step.run'
             await step.run("send-email-notification", async () => {
                 if (moderator) {
                     const finalTicket = await Ticket.findById(ticket._id);
-                    // Ensure finalTicket exists before sending email
                     if (finalTicket) {
                         await sendMail(
                             moderator.email,

@@ -18,7 +18,7 @@ export const createTicket = async (req, res) => {
         await inngest.send({
             name: "ticket/created",
             data: {
-                ticketId:(await newTicket)._id.toString(),
+                ticketId: (await newTicket)._id.toString(),
                 title,
                 description,
                 createdBy: req.user._id.toString(),
@@ -26,10 +26,10 @@ export const createTicket = async (req, res) => {
         });
         return res
             .status(201)
-            json({
-                message: "Ticket created and processing started",
-                ticket: newTicket,
-            });
+        json({
+            message: "Ticket created and processing started",
+            ticket: newTicket,
+        });
     }
     catch (error) {
         console.error("Error creating ticket", error.message);
@@ -49,7 +49,8 @@ export const getTickets = async (req, res) => {
         }
         else {
             tickets = await Ticket.find({ createdBy: user._id })
-                .select("title description status createdAt")
+                .select("title description status createdAt priority helpfulNotes relatedSkills assignedTo")
+                .populate("assignedTo", ["email", "_id"])
                 .sort({ createdAt: -1 })
                 .lean();
         }
@@ -57,7 +58,7 @@ export const getTickets = async (req, res) => {
             .status(200)
             .json(tickets);
     }
-    catch(error) {
+    catch (error) {
         console.error("Error fetching tickets", error.message);
         return res
             .status(500)
@@ -74,12 +75,13 @@ export const getTicket = async (req, res) => {
             ticket = await Ticket
                 .findById(req.params.id)
                 .populate("assignedTo", ["email", "_id"]);
-        } 
+        }
         else {
             ticket = await Ticket.findOne({
                 createdBy: user._id,
                 _id: req.params.id,
-            }).select("title description status createdAt");
+            }).select("title description status createdAt priority helpfulNotes relatedSkills assignedTo")
+                .populate("assignedTo", ["email", "_id"]);
         }
 
         if (!ticket) {
@@ -102,5 +104,62 @@ export const getTicket = async (req, res) => {
         return res
             .status(500)
             .json({ message: "Internal Server Error" });
+    }
+};
+
+export const updateTicket = async (req, res) => {
+    const { id } = req.params;
+    const { status, ...updateData } = req.body;
+
+    try {
+        const oldTicket = await Ticket.findById(id);
+        if (!oldTicket) {
+            return res.status(404).json({ message: 'Ticket not found' });
+        }
+
+        if (oldTicket.status === 'IN_PROGRESS' && status && status !== 'IN_PROGRESS') {
+            const updatedTicket = await Ticket.findByIdAndUpdate(
+                id,
+                { status, ...updateData },
+                { new: true, runValidators: true }
+            ).populate("assignedTo", ["email", "_id"]);
+
+            if (!updatedTicket) {
+                return res
+                    .status(404)
+                    .json({ message: 'Ticket not found after update attempt' });
+            }
+
+            await inngest.send({
+                name: "ticket/status.changed",
+                data: {
+                    ticketId: updatedTicket._id.toString(),
+                    oldStatus: oldTicket.status,
+                    newStatus: updatedTicket.status,
+                    userId: req.user?._id.toString()
+                }
+            });
+
+            return res
+                .status(200)
+                .json(updatedTicket);
+        }
+        else {
+            const updatedTicket = await Ticket.findByIdAndUpdate(
+                id,
+                { status, ...updateData },
+                { new: true, runValidators: true }
+            ).populate("assignedTo", ["email", "_id"]);
+            return res
+                .status(200)
+                .json(updatedTicket);
+        }
+
+    }
+    catch (error) {
+        console.error('Error updating ticket:', error);
+        res
+            .status(500)
+            .json({ message: 'Failed to update ticket', error: error.message });
     }
 };

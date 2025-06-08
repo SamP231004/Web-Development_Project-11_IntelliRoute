@@ -1,4 +1,3 @@
-// frontend2/src/pages/SignupPage.jsx
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '../components/useToast';
@@ -12,17 +11,15 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL;
 const signupSchema = z.object({
     email: z.string().email("Invalid email address").min(1, "Email is required"),
     password: z.string().min(6, "Password must be at least 6 characters").min(1, "Password is required"),
-    confirmPassword: z.string().min(1, "Confirm password is required"), // Added confirmPassword
+    confirmPassword: z.string().min(1, "Confirm password is required"),
     role: z.enum(['user', 'moderator'], { message: "Invalid role selected" }),
-    // skills will be a string from the input, we'll parse it to an array later
-    skills: z.string().optional(), // Initially optional for all
+    skills: z.string().optional(),
 })
 .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
-    path: ["confirmPassword"], // Error message will appear on the confirmPassword field
+    path: ["confirmPassword"],
 })
 .superRefine((data, ctx) => {
-    // Conditional validation for skills based on role
     if (data.role === 'moderator') {
         const skillsArray = data.skills?.split(',').map(s => s.trim()).filter(s => s.length > 0);
         if (!skillsArray || skillsArray.length === 0) {
@@ -41,50 +38,47 @@ export default function SignupPage() {
         register, 
         handleSubmit, 
         formState: { errors }, 
-        watch // Use watch to get the current value of fields
+        watch
     } = useForm({
         resolver: zodResolver(signupSchema),
         defaultValues: {
             email: '',
             password: '',
-            confirmPassword: '', // Added to default values
+            confirmPassword: '',
             role: 'user',
-            skills: '', // Added to default values
+            skills: '',
         },
     });
 
-    const watchedRole = watch('role'); // Watch the 'role' field to conditionally render 'skills'
-
+    const watchedRole = watch('role');
     const navigate = useNavigate();
     const showToast = useToast();
 
     const onSubmit = async (data) => {
         try {
-            // Destructure relevant fields, excluding confirmPassword
             const { email, password, role, skills } = data; 
             
             const payload = { email, password, role };
-
-            // Conditionally add skills if the role is moderator and skills are provided
             if (role === 'moderator' && skills) {
-                // Convert comma-separated string to an array of trimmed strings
                 payload.skills = skills.split(',').map(s => s.trim()).filter(s => s.length > 0);
             }
 
             const response = await fetch(`${API_BASE_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload), // Send the prepared payload
+                body: JSON.stringify(payload),
             });
             const result = await response.json();
 
             if (response.ok) {
                 showToast('Account created successfully! Please log in.', 'success');
                 navigate('/login');
-            } else {
+            } 
+            else {
                 showToast(result.message || 'Signup failed!', 'error');
             }
-        } catch (error) {
+        } 
+        catch (error) {
             console.error('Signup error:', error);
             showToast('Network error, please try again.', 'error');
         }
@@ -121,9 +115,7 @@ export default function SignupPage() {
                                 className={`input input-bordered w-full ${errors.password ? 'input-error' : ''}`}
                                 {...register("password")}
                             />
-                            {errors.password && <label className="label"><span className="label-text-alt text-error">{errors.password.message}</span></label>}
-                        </div>
-                        {/* Confirm Password Field */}
+                            {errors.password && <label className="label"><span className="label-text-alt text-error">{errors.password.message}</span></label>}                        </div>
                         <div className="form-control">
                             <label className="label">
                                 <span className="label-text">Confirm Password</span>
@@ -148,10 +140,8 @@ export default function SignupPage() {
                                 <option value="user">User</option>
                                 <option value="moderator">Moderator</option>
                             </select>
-                            {errors.role && <label className="label"><span className="label-text-alt text-error">{errors.role.message}</span></label>}
-                        </div>
+                            {errors.role && <label className="label"><span className="label-text-alt text-error">{errors.role.message}</span></label>}                        </div>
 
-                        {/* Skills Input - Conditionally Rendered */}
                         {watchedRole === 'moderator' && (
                             <div className="form-control">
                                 <label className="label">

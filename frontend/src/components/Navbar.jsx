@@ -1,13 +1,10 @@
-// frontend2/src/components/Navbar.jsx
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "./useToast";
 
-// Import icons from react-icons
-import { FaBars, FaSun, FaMoon, FaUserCircle, FaSignOutAlt, FaPlusSquare } from 'react-icons/fa'; // Example Font Awesome icons
-import { MdAdminPanelSettings } from 'react-icons/md'; // Example Material Design icon
+import { FaBars, FaSun, FaMoon, FaUserCircle, FaSignOutAlt, FaPlusSquare } from 'react-icons/fa';
+import { MdAdminPanelSettings } from 'react-icons/md';
 
-// Navbar now accepts theme props
 export default function Navbar({ onThemeToggle, currentTheme }) {
     const token = localStorage.getItem("token");
     let user = localStorage.getItem("user");
@@ -17,10 +14,11 @@ export default function Navbar({ onThemeToggle, currentTheme }) {
     if (user) {
         try {
             user = JSON.parse(user);
-        } catch (e) {
+        }
+        catch (e) {
             console.error("Failed to parse user data from localStorage", e);
             localStorage.removeItem("user");
-            user = null; // Reset user if parsing fails
+            user = null;
         }
     }
 
@@ -30,25 +28,18 @@ export default function Navbar({ onThemeToggle, currentTheme }) {
         showToast("Logged out successfully!", "success");
         navigate("/login");
     };
-
-    // Determine if the toggle should be checked for "dark" themes (adjust based on your themes from tailwind.config.js)
-    const isDarkModeActive = ['dark', 'dracula', 'synthwave', 'forest'].includes(currentTheme);
-
-    return (
-        <div className="navbar bg-base-200 shadow-lg px-4 sticky top-0 z-50"> {/* Added sticky top and higher z-index */}
+    const isDarkModeActive = currentTheme === 'dark'; return (
+        <div className="navbar bg-base-200 shadow-lg px-4 sticky top-0 z-50">
             <div className="navbar-start">
-                {/* Mobile menu dropdown for smaller screens */}
                 <div className="dropdown lg:hidden">
                     <div tabIndex={0} role="button" className="btn btn-ghost">
-                        <FaBars className="h-5 w-5" /> {/* Hamburger icon from react-icons */}
+                        <FaBars className="h-5 w-5" />
                     </div>
-                    {/* Mobile menu items */}
                     <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                         <li><Link to="/">Tickets</Link></li>
                         {user && user?.role === "admin" && (
                             <li><Link to="/admin">Admin Panel</Link></li>
                         )}
-                        {/* You can add more mobile-specific links here */}
                     </ul>
                 </div>
                 <Link to="/" className="btn btn-ghost text-xl normal-case">
@@ -56,22 +47,17 @@ export default function Navbar({ onThemeToggle, currentTheme }) {
                 </Link>
             </div>
 
-            <div className="navbar-center hidden lg:flex"> {/* Desktop menu items, hidden on smaller screens */}
+            <div className="navbar-center hidden lg:flex">
                 <ul className="menu menu-horizontal px-1">
                     <li><Link to="/">Tickets</Link></li>
                     {user && user?.role === "admin" && (
                         <li><Link to="/admin">Admin Panel</Link></li>
                     )}
                 </ul>
-            </div>
-
-            <div className="navbar-end">
-                {/* Theme Toggle Button - using react-icons */}
+            </div>            <div className="navbar-end">
                 <label className="swap swap-rotate btn btn-ghost btn-circle mr-2">
                     <input type="checkbox" onChange={onThemeToggle} checked={isDarkModeActive} />
-                    {/* Sun icon for light themes */}
                     <FaSun className="swap-on fill-current w-6 h-6" />
-                    {/* Moon icon for dark themes */}
                     <FaMoon className="swap-off fill-current w-6 h-6" />
                 </label>
 
@@ -97,7 +83,7 @@ export default function Navbar({ onThemeToggle, currentTheme }) {
                         <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                             <li>
                                 <span className="justify-between text-base-content font-semibold px-4 py-2 cursor-default">
-                                    <FaUserCircle className="inline-block mr-2" /> Hi, **{user?.email}**
+                                    <FaUserCircle className="inline-block mr-2" /> Hi, {user?.email}
                                 </span>
                             </li>
                             {user && user?.role === "admin" && (

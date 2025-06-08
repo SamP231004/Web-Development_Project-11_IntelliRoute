@@ -1,4 +1,3 @@
-// src/pages/AdminPanel.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { MdAdminPanelSettings, MdPeople, MdDns, MdSecurity } from 'react-icons/md';
@@ -17,13 +16,11 @@ export default function AdminPanel() {
 
     const token = localStorage.getItem("token");
 
-    // Inline function for capitalizing the first letter
     const capitalizeFirstLetter = useCallback((string) => {
         if (!string) return '';
         return string.charAt(0).toUpperCase() + string.slice(1);
     }, []);
 
-    // Helper to fetch users
     const fetchUsers = useCallback(async () => {
         if (!token) {
             showToast("Authentication required. Please log in.", "error");
@@ -48,13 +45,13 @@ export default function AdminPanel() {
             const data = await res.json();
             setUsers(data);
             setFilteredUsers(data);
-        } catch (err) {
+        } 
+        catch (err) {
             showToast("Error fetching users. Check console.", "error");
             console.error("Error fetching users", err);
         }
     }, [token, showToast]);
 
-    // Fetch users initially and whenever user management view is toggled
     useEffect(() => {
         if (showUserManagement) {
             fetchUsers();
@@ -80,7 +77,7 @@ export default function AdminPanel() {
             const res = await fetch(
                 `${import.meta.env.VITE_BACKEND_API_URL}/auth/update-user`,
                 {
-                    method: "POST", // Changed back to POST as per your original code
+                    method: "POST", 
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
@@ -106,10 +103,12 @@ export default function AdminPanel() {
             setEditingUserEmail(null);
             setFormData({ role: "", skills: "" });
             fetchUsers();
-        } catch (err) {
+        } 
+        catch (err) {
             showToast("Update failed. Check console.", "error");
             console.error("Update failed", err);
-        } finally {
+        } 
+        finally {
             setIsUpdating(false);
         }
     };
@@ -136,19 +135,16 @@ export default function AdminPanel() {
         >
             <h2 className="text-3xl font-bold text-accent mb-6 flex items-center">
                 <MdAdminPanelSettings className="inline-block mr-3 text-4xl" /> Admin Panel
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* User Management Card */}
-                <div className="card bg-base-100 shadow-md border border-base-300">
+            </h2>            <div className="flex justify-center mb-6">
+                <div className="card w-full max-w-2xl bg-base-100 shadow-md border border-base-300">
                     <div className="card-body">
                         <h3 className="card-title text-secondary flex items-center">
                             <MdPeople className="inline-block mr-2" /> User Management
                         </h3>
-                        <p>View, add, edit, or delete user accounts and manage their roles.</p>
+                        <p>View and manage user accounts, roles, and skills.</p>
                         <div className="card-actions justify-end mt-4">
                             <button
-                                className="btn btn-primary btn-sm"
+                                className="btn btn-primary"
                                 onClick={() => setShowUserManagement(!showUserManagement)}
                             >
                                 {showUserManagement ? 'Hide Users' : 'Manage Users'}
@@ -156,36 +152,7 @@ export default function AdminPanel() {
                         </div>
                     </div>
                 </div>
-
-                {/* System Logs Card */}
-                <div className="card bg-base-100 shadow-md border border-base-300">
-                    <div className="card-body">
-                        <h3 className="card-title text-secondary flex items-center">
-                            <MdDns className="inline-block mr-2" /> System Logs
-                        </h3>
-                        <p>Review application logs for debugging and monitoring.</p>
-                        <div className="card-actions justify-end mt-4">
-                            <button className="btn btn-secondary btn-sm">View Logs</button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Security Settings Card */}
-                <div className="card bg-base-100 shadow-md border border-base-300">
-                    <div className="card-body">
-                        <h3 className="card-title text-secondary flex items-center">
-                            <MdSecurity className="inline-block mr-2" /> Security Settings
-                        </h3>
-                        <p>Configure security policies, authentication methods, and access controls.</p>
-                        <div className="card-actions justify-end mt-4">
-                            <button className="btn btn-accent btn-sm">Configure Security</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* User Management Table (Conditionally rendered) */}
-            {showUserManagement && (
+            </div>            {showUserManagement && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -202,9 +169,7 @@ export default function AdminPanel() {
                     />
 
                     <div className="overflow-x-auto shadow-xl rounded-lg">
-                        <table className="table w-full">
-                            {/* head */}
-                            <thead>
+                        <table className="table w-full">                            <thead>
                                 <tr>
                                     <th>Email</th>
                                     <th>Role</th>
@@ -280,7 +245,7 @@ export default function AdminPanel() {
                                                             className="btn btn-ghost btn-sm flex-1"
                                                             onClick={() => {
                                                                 setEditingUserEmail(null);
-                                                                setFormData({ role: "", skills: "" }); // Clear form on cancel
+                                                                setFormData({ role: "", skills: "" });
                                                             }}
                                                             disabled={isUpdating}
                                                         >
@@ -301,18 +266,8 @@ export default function AdminPanel() {
                                 ))}
                             </tbody>
                         </table>
-                    </div>
-                </motion.div>
+                    </div>                </motion.div>
             )}
-
-            <div className="mt-8 p-4 bg-base-100 rounded-lg shadow-inner border border-base-300">
-                <h3 className="text-xl font-bold text-info mb-3">Admin Quick Actions</h3>
-                <div className="flex flex-wrap gap-4">
-                    <button className="btn btn-outline btn-sm">Reset Cache</button>
-                    <button className="btn btn-outline btn-sm">Backup Database</button>
-                    <button className="btn btn-outline btn-sm">Deploy Updates</button>
-                </div>
-            </div>
         </motion.div>
     );
 }

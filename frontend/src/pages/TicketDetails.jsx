@@ -1,20 +1,18 @@
-// src/pages/TicketDetailsPage.jsx
-import { useEffect, useState, useCallback } from "react"; // Added useCallback
-import { useParams, useNavigate } from "react-router-dom"; // Added useNavigate
+import { useEffect, useState, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-import { useToast } from "../components/useToast"; // Import useToast
-import { FaSpinner, FaInfoCircle, FaHourglassHalf, FaCheckCircle, FaCircle } from 'react-icons/fa'; // Added icons for status badges
+import { useToast } from "../components/useToast";
+import { FaSpinner, FaInfoCircle, FaHourglassHalf, FaCheckCircle, FaCircle } from 'react-icons/fa';
 
 export default function TicketDetailsPage() {
     const { id } = useParams();
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(true);
     const showToast = useToast();
-    const navigate = useNavigate(); // For redirection on auth failure
+    const navigate = useNavigate();
 
     const token = localStorage.getItem("token");
 
-    // Inline function for capitalizing the first letter
     const capitalizeFirstLetter = (string) => {
         if (!string) return '';
         return string.charAt(0).toUpperCase() + string.slice(1);
@@ -25,16 +23,16 @@ export default function TicketDetailsPage() {
         if (!token) {
             showToast("Authentication required. Please log in.", "error");
             setLoading(false);
-            navigate('/login'); // Redirect to login if no token
+            navigate('/login');
             return;
         }
 
         try {
             const requestUrl = `${import.meta.env.VITE_BACKEND_API_URL}/tickets/${id}`;
-            console.log("Frontend fetching from URL:", requestUrl); // <-- ADDED THIS LINE FOR DEBUGGING
+            console.log("Frontend fetching from URL:", requestUrl); 
 
             const res = await fetch(
-                requestUrl, // Use the constructed URL
+                requestUrl,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -42,10 +40,7 @@ export default function TicketDetailsPage() {
                 }
             );
 
-            // Important: Check res.ok first before attempting to parse JSON
             if (!res.ok) {
-                // If the response is not OK, it might not be JSON.
-                // Try to read it as text first to see what the server sent.
                 const errorText = await res.text();
                 console.error(`Fetch failed with status ${res.status}:`, errorText);
                 showToast(`Error: ${res.statusText || 'Failed to fetch ticket details'}`, "error");
@@ -53,19 +48,19 @@ export default function TicketDetailsPage() {
                 if (res.status === 404 || res.status === 401 || res.status === 403) {
                     navigate('/tickets');
                 }
-                setLoading(false); // Ensure loading is false after handling the error
-                return; // Stop execution here
+                setLoading(false);
+                return;
             }
 
             const data = await res.json();
-            console.log("Ticket data received:", data); // Debugging log
-
-            // The data structure from Postman is { ticket: {...} }
+            console.log("Ticket data received:", data);
             setTicket(data.ticket);
-        } catch (err) {
+        } 
+        catch (err) {
             showToast("Something went wrong fetching ticket details. Please check console.", "error");
             console.error("Fetch error:", err);
-        } finally {
+        } 
+        finally {
             setLoading(false);
         }
     }, [id, token, showToast, navigate]);
@@ -74,17 +69,16 @@ export default function TicketDetailsPage() {
         fetchTicket();
     }, [fetchTicket]);
 
-    // Determine badge color and icon for status
     const getStatusBadge = (status) => {
         let badgeClass = "badge-info";
-        let Icon = FaCircle; // Default icon
+        let Icon = FaCircle;
 
         switch (status) {
             case "IN_PROGRESS":
                 badgeClass = "badge-warning";
                 Icon = FaHourglassHalf;
                 break;
-            case "RESOLVED":
+            case "ASSIGNED":
                 badgeClass = "badge-success";
                 Icon = FaCheckCircle;
                 break;
@@ -97,7 +91,7 @@ export default function TicketDetailsPage() {
                 Icon = FaInfoCircle;
                 break;
             default:
-                badgeClass = "badge-info"; // Fallback for unknown status
+                badgeClass = "badge-info";
                 Icon = FaCircle;
         }
         return (
@@ -107,7 +101,6 @@ export default function TicketDetailsPage() {
         );
     };
 
-    // Determine badge color for priority
     const getPriorityBadgeClass = (priority) => {
         switch (priority) {
             case "high": return "badge-error";
@@ -138,17 +131,15 @@ export default function TicketDetailsPage() {
             <h2 className="text-3xl font-bold mb-6 text-center">Ticket Details</h2>
 
             <div className="card bg-base-100 shadow-xl p-6 space-y-5">
-                <h3 className="text-2xl font-semibold text-primary">{ticket.title}</h3>
-                <p className="text-base-content leading-relaxed">{ticket.description}</p>
+                <h3 className="text-2xl font-semibold text-primary">{ticket.title}</h3>                <p className="text-base-content leading-relaxed">{ticket.description}</p>
 
-                {/* AI Analysis & Status Section */}
                 <div className="divider text-lg text-gray-500">AI Analysis & Status</div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                     <div className="stat">
                         <div className="stat-title">Status</div>
                         <div className="stat-value text-xl">
-                            {ticket.status && getStatusBadge(ticket.status)} {/* Use the helper with icons */}
+                            {ticket.status && getStatusBadge(ticket.status)}
                         </div>
                     </div>
 
@@ -161,13 +152,11 @@ export default function TicketDetailsPage() {
                                 </span>
                             </div>
                         </div>
-                    )}
-
-                    {ticket.assignedTo && (
+                    )}                    {ticket.assignedTo && (
                         <div className="stat">
                             <div className="stat-title">Assigned To</div>
-                            <div className="stat-value text-xl">
-                                {ticket.assignedTo.email ? ticket.assignedTo.email.split('@')[0] : 'N/A'} {/* Show only name part */}
+                            <div className="stat-value text-xl text-info">
+                                {ticket.assignedTo?.email || 'Not Assigned'}
                             </div>
                         </div>
                     )}
@@ -197,7 +186,7 @@ export default function TicketDetailsPage() {
 
                 {ticket.createdAt && (
                     <p className="text-sm text-gray-500 text-right mt-4">
-                        Created At: {new Date(ticket.createdAt).toLocaleString()}
+                        Created At: {new Date(ticket.createdAt).toLocaleDateString('en-GB')}
                     </p>
                 )}
             </div>

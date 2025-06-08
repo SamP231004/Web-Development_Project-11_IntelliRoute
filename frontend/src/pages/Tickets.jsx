@@ -1,14 +1,11 @@
-// frontend2/src/pages/Tickets.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPlusSquare, FaTicketAlt, FaInfoCircle, FaCheckCircle, FaHourglassHalf, FaSpinner, FaCircle } from 'react-icons/fa';
 import { useToast } from '../components/useToast';
 
-// Assume your backend API URL is from .env
 const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL;
 
-// Framer Motion variants for staggered animation
 const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -34,15 +31,12 @@ export default function Tickets() {
     const navigate = useNavigate();
 
     const token = localStorage.getItem('token');
-    // const user = JSON.parse(localStorage.getItem('user'));
 
-    // Inline function for capitalizing the first letter
     const capitalizeFirstLetter = (string) => {
         if (!string) return '';
         return string.charAt(0).toUpperCase() + string.slice(1);
     };
 
-    // Function to fetch tickets - wrapped in useCallback for useEffect dependency stability
     const fetchTickets = useCallback(async () => {
         setLoadingTickets(true);
         setError(null);
@@ -76,34 +70,35 @@ export default function Tickets() {
             }
 
             const data = await response.json();
-            // FIX: Changed from data.tickets to data as per your console log
             setTickets(data || []);
-        } catch (err) {
+        } 
+        catch (err) {
             console.error("Error fetching tickets:", err);
             setError(err.message);
             showToast(`Error fetching tickets: ${err.message}`, "error");
-        } finally {
+        } 
+        finally {
             setLoadingTickets(false);
         }
     }, [token, navigate, showToast]);
 
-    // Effect to fetch tickets on component mount and when fetchTickets function changes
     useEffect(() => {
         fetchTickets();
     }, [fetchTickets]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    const handleSubmit = async (e) => {
+    };    const handleSubmit = async (e) => {
         e.preventDefault();
-        setSubmittingTicket(true);
+        setSubmittingTicket(true);        const loadingTimeout = setTimeout(() => {
+            setSubmittingTicket(false);
+        }, 2000);
 
         if (!token) {
             showToast("Authentication required to create a ticket. Please log in.", "error");
             setSubmittingTicket(false);
             navigate('/login');
+            clearTimeout(loadingTimeout);
             return;
         }
 
@@ -117,19 +112,23 @@ export default function Tickets() {
                 body: JSON.stringify(form),
             });
 
-            const data = await res.json();
-
-            if (res.ok) {
+            const data = await res.json();            if (res.ok) {
                 showToast("Ticket created successfully!", "success");
-                setForm({ title: "", description: "" });
-                fetchTickets(); // Re-fetch tickets to show the new one
+                setForm({ title: "", description: "" }); 
+                  clearTimeout(loadingTimeout);
+                setSubmittingTicket(false);
+                
+                await fetchTickets();
             } else {
                 showToast(data.message || "Ticket creation failed", "error");
+                clearTimeout(loadingTimeout);
+                setSubmittingTicket(false);
             }
-        } catch (err) {
+        } 
+        catch (err) {
             showToast("Network error, please try again.", "error");
             console.error("Error creating ticket:", err);
-        } finally {
+            clearTimeout(loadingTimeout);
             setSubmittingTicket(false);
         }
     };
@@ -175,10 +174,7 @@ export default function Tickets() {
         <div className="container mx-auto p-4 lg:p-8">
             <h2 className="text-3xl font-bold mb-6 text-center text-primary">
                 <FaTicketAlt className="inline-block mr-2" /> Your Tickets
-            </h2>
-
-            {/* Create Ticket Section */}
-            <div className="card bg-base-100 shadow-xl p-6 mb-10">
+            </h2>            <div className="card bg-base-100 shadow-xl p-6 mb-10">
                 <h3 className="card-title text-2xl mb-4">Create New Ticket</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="form-control">
@@ -206,25 +202,24 @@ export default function Tickets() {
                             className="textarea textarea-bordered w-full h-32"
                             required
                         ></textarea>
-                    </div>
-                    <div className="form-control mt-4">
+                    </div>                    <div className="form-control mt-4">
                         <button
                             className="btn btn-primary w-full"
                             type="submit"
                             disabled={submittingTicket}
                         >
                             {submittingTicket ? (
-                                <span className="loading loading-spinner loading-sm"></span>
+                                <>
+                                    <span className="loading loading-spinner loading-sm mr-2"></span>
+                                    Creating Ticket...
+                                </>
                             ) : (
                                 "Submit New Ticket"
                             )}
                         </button>
                     </div>
                 </form>
-            </div>
-
-            {/* All Tickets Section */}
-            <h2 className="text-2xl font-bold mb-6 text-center">All Submitted Tickets</h2>
+            </div>            <h2 className="text-2xl font-bold mb-6 text-center">All Submitted Tickets</h2>
             {tickets.length === 0 ? (
                 <div className="md:col-span-2 lg:col-span-3 text-center py-10">
                     <div className="alert alert-info shadow-lg inline-flex">
@@ -256,16 +251,14 @@ export default function Tickets() {
                                         <div className={`badge ${getPriorityBadgeClass(ticket.priority)} badge-outline`}>
                                             {capitalizeFirstLetter(ticket.priority)} Priority
                                         </div>
-                                    )}
-                                    {/* Ensure assignedTo exists and has an email property before trying to split */}
-                                    {ticket.assignedTo && ticket.assignedTo.email && (
+                                    )}                                    {ticket.assignedTo && (
                                         <div className="badge badge-ghost badge-outline">
-                                            Assigned: {ticket.assignedTo.email.split('@')[0]}
+                                            Assigned: {ticket.assignedTo?.email || 'Not Assigned'}
                                         </div>
                                     )}
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2 text-right">
-                                    Created: {new Date(ticket.createdAt).toLocaleString()}
+                                    Created: {new Date(ticket.createdAt).toLocaleDateString('en-GB')}
                                 </p>
                             </Link>
                         </motion.div>

@@ -1,18 +1,14 @@
-// frontend2/src/components/useToast.jsx
 import { Toaster, toast } from 'react-hot-toast';
 
-// Export the toast function directly for use
 export const useToast = () => toast;
 
-// Export a component that renders the toasts
 export const ToastProvider = ({ children }) => (
     <>
         {children}
         <Toaster
-            position="top-right" // Position toasts
+            position="top-right"
             reverseOrder={false}
             toastOptions={{
-                // Custom styling for toasts
                 style: {
                     border: '1px solid #713200',
                     padding: '16px',
@@ -20,13 +16,13 @@ export const ToastProvider = ({ children }) => (
                 },
                 success: {
                     iconTheme: {
-                        primary: '#10B981', // Tailwind green-500
+                        primary: '#10B981',
                         secondary: '#FFFFFF',
                     },
                 },
                 error: {
                     iconTheme: {
-                        primary: '#EF4444', // Tailwind red-500
+                        primary: '#EF4444',
                         secondary: '#FFFFFF',
                     },
                 },
