@@ -4,10 +4,11 @@ import User from "../models/user.js";
 import { inngest } from "../inngest/client.js";
 
 export const signup = async (req, res) => {
-    const { email, password, skills = [] } = req.body;
+    const { email, password, skills = [], role = 'user' } = req.body; 
+    
     try {
-        const hashed = bcrypt.hash(password, 10);
-        const user = await User.create({ email, password: hashed, skills });
+        const hashed = await bcrypt.hash(password, 10);
+        const user = await User.create({ email, password: hashed, skills, role });
 
         await inngest.send({
             name: "user/signup",
@@ -17,7 +18,7 @@ export const signup = async (req, res) => {
         });
 
         const token = jwt.sign(
-            { _id: user._id, role: user.role },
+            { _id: user._id, role: user.role }, 
             process.env.JWT_SECRET
         );
 
@@ -32,7 +33,7 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const user = User.findOne({ email });
+        const user = await User.findOne({ email });
         if (!user) return res
             .status(401)
             .json({ error: "User not found" });

@@ -1,0 +1,9 @@
+/* frontend2/src/CSS/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: Ensure body takes full viewport height for flexbox layouts in AppLayout */
+body {
+  min-height: 100vh;
+}
